@@ -1,0 +1,441 @@
+#pragma kernel ClearSurfels
+#pragma kernel EstimateNormals
+#pragma kernel ClearHash
+#pragma kernel BuildHash
+#pragma kernel ClearAccumulation
+#pragma kernel MatchAndAccumulate
+#pragma kernel ApplyAccumulation
+#pragma kernel CreateNewSurfels
+#pragma kernel ClearOutputCounter
+#pragma kernel CompactStableSurfels
+
+#define THREADS 64
+
+struct ScanSample
+{
+    float4 positionDepth;
+    float4 viewDirectionValid;
+};
+
+struct SampleState
+{
+    float4 normalValid;
+};
+
+struct Surfel
+{
+    float4 positionRadius;
+    float4 normalWeight;
+    uint observationCount;
+    uint lastSeenFrame;
+    int next;
+    uint state;
+    int cellX;
+    int cellY;
+    int cellZ;
+    int padding;
+};
+
+StructuredBuffer<ScanSample> _Samples;
+RWStructuredBuffer<SampleState> _SampleStates;
+RWStructuredBuffer<Surfel> _Surfels;
+RWStructuredBuffer<int> _HashHeads;
+RWStructuredBuffer<int4> _AccumPosition;
+RWStructuredBuffer<int4> _AccumNormal;
+RWStructuredBuffer<int> _MatchIndices;
+RWStructuredBuffer<uint> _Counters;
+RWStructuredBuffer<float3> _OutputPoints;
+
+int _SampleCount;
+int _FrameWidth;
+int _FrameHeight;
+int _FrameIndex;
+int _MaxSurfels;
+int _HashBucketCount;
+int _MaxBucketTraversal;
+int _NewSurfelStride;
+int _MinSurfelObservations;
+
+float _CellSize;
+float _SurfelRadius;
+float _MatchDistance;
+float _PointToPlaneDistance;
+float _NormalDotThreshold;
+float _MinViewNormalDot;
+float _NormalNeighborDistance;
+float _MinSurfelWeight;
+float _MaxSurfelWeight;
+float _PositionScale;
+float _NormalScale;
+
+uint HashCell(int3 cell)
+{
+    uint h = (uint)cell.x * 73856093u;
+    h ^= (uint)cell.y * 19349663u;
+    h ^= (uint)cell.z * 83492791u;
+    return h % (uint)_HashBucketCount;
+}
+
+int3 WorldToCell(float3 position)
+{
+    return (int3)floor(position / _CellSize);
+}
+
+bool IsValidSample(int index)
+{
+    return index >= 0 &&
+           index < _SampleCount &&
+           _Samples[index].viewDirectionValid.w > 0.5f &&
+           _Samples[index].positionDepth.w > 0.0f;
+}
+
+float3 SafeNormalize(float3 value)
+{
+    float lenSq = dot(value, value);
+    return lenSq > 1e-12f ? value * rsqrt(lenSq) : float3(0.0f, 0.0f, 0.0f);
+}
+
+[numthreads(THREADS, 1, 1)]
+void ClearSurfels(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= (uint)_MaxSurfels)
+    {
+        return;
+    }
+
+    Surfel surfel;
+    surfel.positionRadius = float4(0.0f, 0.0f, 0.0f, _SurfelRadius);
+    surfel.normalWeight = float4(0.0f, 1.0f, 0.0f, 0.0f);
+    surfel.observationCount = 0u;
+    surfel.lastSeenFrame = 0u;
+    surfel.next = -1;
+    surfel.state = 0u;
+    surfel.cellX = 0;
+    surfel.cellY = 0;
+    surfel.cellZ = 0;
+    surfel.padding = 0;
+    _Surfels[index] = surfel;
+    _AccumPosition[index] = int4(0, 0, 0, 0);
+    _AccumNormal[index] = int4(0, 0, 0, 0);
+}
+
+[numthreads(THREADS, 1, 1)]
+void EstimateNormals(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= (uint)_SampleCount)
+    {
+        return;
+    }
+
+    SampleState state;
+    state.normalValid = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+    if (!IsValidSample((int)index))
+    {
+        _SampleStates[index] = state;
+        _MatchIndices[index] = -2;
+        return;
+    }
+
+    int x = (int)(index % (uint)_FrameWidth);
+    int y = (int)(index / (uint)_FrameWidth);
+    if (x <= 0 || y <= 0 || x >= _FrameWidth - 1 || y >= _FrameHeight - 1)
+    {
+        _SampleStates[index] = state;
+        _MatchIndices[index] = -2;
+        return;
+    }
+
+    int leftIndex = (int)index - 1;
+    int rightIndex = (int)index + 1;
+    int downIndex = (int)index - _FrameWidth;
+    int upIndex = (int)index + _FrameWidth;
+
+    if (!IsValidSample(leftIndex) || !IsValidSample(rightIndex) || !IsValidSample(downIndex) || !IsValidSample(upIndex))
+    {
+        _SampleStates[index] = state;
+        _MatchIndices[index] = -2;
+        return;
+    }
+
+    float3 center = _Samples[index].positionDepth.xyz;
+    float3 left = _Samples[leftIndex].positionDepth.xyz;
+    float3 right = _Samples[rightIndex].positionDepth.xyz;
+    float3 down = _Samples[downIndex].positionDepth.xyz;
+    float3 up = _Samples[upIndex].positionDepth.xyz;
+
+    if (distance(center, left) > _NormalNeighborDistance ||
+        distance(center, right) > _NormalNeighborDistance ||
+        distance(center, down) > _NormalNeighborDistance ||
+        distance(center, up) > _NormalNeighborDistance)
+    {
+        _SampleStates[index] = state;
+        _MatchIndices[index] = -2;
+        return;
+    }
+
+    float3 dx = right - left;
+    float3 dy = up - down;
+    float3 normal = SafeNormalize(cross(dy, dx));
+    if (dot(normal, normal) < 0.5f)
+    {
+        _SampleStates[index] = state;
+        _MatchIndices[index] = -2;
+        return;
+    }
+
+    float3 viewDir = SafeNormalize(_Samples[index].viewDirectionValid.xyz);
+    if (dot(normal, -viewDir) < 0.0f)
+    {
+        normal = -normal;
+    }
+
+    if (dot(normal, -viewDir) < _MinViewNormalDot)
+    {
+        _SampleStates[index] = state;
+        _MatchIndices[index] = -2;
+        return;
+    }
+
+    state.normalValid = float4(normal, 1.0f);
+    _SampleStates[index] = state;
+    _MatchIndices[index] = -1;
+}
+
+[numthreads(THREADS, 1, 1)]
+void ClearHash(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index < (uint)_HashBucketCount)
+    {
+        _HashHeads[index] = -1;
+    }
+}
+
+[numthreads(THREADS, 1, 1)]
+void BuildHash(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= (uint)_MaxSurfels)
+    {
+        return;
+    }
+
+    Surfel surfel = _Surfels[index];
+    if (surfel.state == 0u)
+    {
+        return;
+    }
+
+    int3 cell = WorldToCell(surfel.positionRadius.xyz);
+    surfel.cellX = cell.x;
+    surfel.cellY = cell.y;
+    surfel.cellZ = cell.z;
+
+    int oldHead;
+    uint hash = HashCell(cell);
+    InterlockedExchange(_HashHeads[hash], (int)index, oldHead);
+    surfel.next = oldHead;
+    _Surfels[index] = surfel;
+}
+
+[numthreads(THREADS, 1, 1)]
+void ClearAccumulation(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= (uint)_MaxSurfels)
+    {
+        return;
+    }
+
+    _AccumPosition[index] = int4(0, 0, 0, 0);
+    _AccumNormal[index] = int4(0, 0, 0, 0);
+}
+
+[numthreads(THREADS, 1, 1)]
+void MatchAndAccumulate(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= (uint)_SampleCount || _SampleStates[index].normalValid.w < 0.5f)
+    {
+        return;
+    }
+
+    float3 samplePosition = _Samples[index].positionDepth.xyz;
+    float3 normal = _SampleStates[index].normalValid.xyz;
+    int3 baseCell = WorldToCell(samplePosition);
+    int bestIndex = -1;
+    float bestScore = 1e20f;
+
+    for (int z = -1; z <= 1; z++)
+    {
+        for (int y = -1; y <= 1; y++)
+        {
+            for (int x = -1; x <= 1; x++)
+            {
+                int3 cell = baseCell + int3(x, y, z);
+                int surfelIndex = _HashHeads[HashCell(cell)];
+                int traversed = 0;
+
+                while (surfelIndex >= 0 && traversed < _MaxBucketTraversal)
+                {
+                    Surfel surfel = _Surfels[surfelIndex];
+                    if (surfel.state != 0u)
+                    {
+                        float3 surfelPosition = surfel.positionRadius.xyz;
+                        float3 surfelNormal = surfel.normalWeight.xyz;
+                        float3 delta = samplePosition - surfelPosition;
+                        float distanceSq = dot(delta, delta);
+                        float planeDistance = abs(dot(delta, surfelNormal));
+                        float normalDot = dot(normal, surfelNormal);
+
+                        if (distanceSq <= _MatchDistance * _MatchDistance &&
+                            planeDistance <= _PointToPlaneDistance &&
+                            normalDot >= _NormalDotThreshold)
+                        {
+                            float score = planeDistance + 0.25f * sqrt(distanceSq) - 0.001f * surfel.normalWeight.w;
+                            if (score < bestScore)
+                            {
+                                bestScore = score;
+                                bestIndex = surfelIndex;
+                            }
+                        }
+                    }
+
+                    surfelIndex = surfel.next;
+                    traversed++;
+                }
+            }
+        }
+    }
+
+    _MatchIndices[index] = bestIndex;
+    if (bestIndex < 0)
+    {
+        return;
+    }
+
+    int3 fixedPosition = (int3)round(samplePosition * _PositionScale);
+    int3 fixedNormal = (int3)round(normal * _NormalScale);
+    InterlockedAdd(_AccumPosition[bestIndex].x, fixedPosition.x);
+    InterlockedAdd(_AccumPosition[bestIndex].y, fixedPosition.y);
+    InterlockedAdd(_AccumPosition[bestIndex].z, fixedPosition.z);
+    InterlockedAdd(_AccumPosition[bestIndex].w, 1);
+    InterlockedAdd(_AccumNormal[bestIndex].x, fixedNormal.x);
+    InterlockedAdd(_AccumNormal[bestIndex].y, fixedNormal.y);
+    InterlockedAdd(_AccumNormal[bestIndex].z, fixedNormal.z);
+}
+
+[numthreads(THREADS, 1, 1)]
+void ApplyAccumulation(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= (uint)_MaxSurfels)
+    {
+        return;
+    }
+
+    int4 positionAccum = _AccumPosition[index];
+    int count = positionAccum.w;
+    if (count <= 0)
+    {
+        return;
+    }
+
+    Surfel surfel = _Surfels[index];
+    if (surfel.state == 0u)
+    {
+        return;
+    }
+
+    int4 normalAccum = _AccumNormal[index];
+    float invCount = 1.0f / (float)count;
+    float3 observedPosition = float3(positionAccum.x, positionAccum.y, positionAccum.z) * (invCount / _PositionScale);
+    float3 observedNormal = SafeNormalize(float3(normalAccum.x, normalAccum.y, normalAccum.z) * (invCount / _NormalScale));
+
+    float oldWeight = max(0.001f, surfel.normalWeight.w);
+    float observedWeight = min((float)count, 4.0f);
+    float totalWeight = min(oldWeight + observedWeight, _MaxSurfelWeight);
+    float blendWeight = oldWeight + observedWeight;
+    surfel.positionRadius.xyz = (surfel.positionRadius.xyz * oldWeight + observedPosition * observedWeight) / blendWeight;
+    surfel.normalWeight.xyz = SafeNormalize(surfel.normalWeight.xyz * oldWeight + observedNormal * observedWeight);
+    surfel.normalWeight.w = totalWeight;
+    surfel.positionRadius.w = _SurfelRadius;
+    surfel.observationCount += 1u;
+    surfel.lastSeenFrame = (uint)_FrameIndex;
+    _Surfels[index] = surfel;
+}
+
+[numthreads(THREADS, 1, 1)]
+void CreateNewSurfels(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= (uint)_SampleCount ||
+        _SampleStates[index].normalValid.w < 0.5f ||
+        _MatchIndices[index] != -1)
+    {
+        return;
+    }
+
+    if (_NewSurfelStride > 1 && ((int)index % _NewSurfelStride) != 0)
+    {
+        return;
+    }
+
+    uint newIndex;
+    InterlockedAdd(_Counters[0], 1u, newIndex);
+    if (newIndex >= (uint)_MaxSurfels)
+    {
+        return;
+    }
+
+    float3 samplePosition = _Samples[index].positionDepth.xyz;
+    float3 normal = _SampleStates[index].normalValid.xyz;
+    int3 cell = WorldToCell(samplePosition);
+
+    Surfel surfel;
+    surfel.positionRadius = float4(samplePosition, _SurfelRadius);
+    surfel.normalWeight = float4(normal, 1.0f);
+    surfel.observationCount = 1u;
+    surfel.lastSeenFrame = (uint)_FrameIndex;
+    surfel.next = -1;
+    surfel.state = 1u;
+    surfel.cellX = cell.x;
+    surfel.cellY = cell.y;
+    surfel.cellZ = cell.z;
+    surfel.padding = 0;
+    _Surfels[newIndex] = surfel;
+}
+
+[numthreads(THREADS, 1, 1)]
+void ClearOutputCounter(uint3 id : SV_DispatchThreadID)
+{
+    _Counters[1] = 0u;
+}
+
+[numthreads(THREADS, 1, 1)]
+void CompactStableSurfels(uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.x;
+    if (index >= (uint)_MaxSurfels)
+    {
+        return;
+    }
+
+    Surfel surfel = _Surfels[index];
+    if (surfel.state == 0u ||
+        surfel.observationCount < (uint)_MinSurfelObservations ||
+        surfel.normalWeight.w < _MinSurfelWeight)
+    {
+        return;
+    }
+
+    uint outputIndex;
+    InterlockedAdd(_Counters[1], 1u, outputIndex);
+    if (outputIndex < (uint)_MaxSurfels)
+    {
+        _OutputPoints[outputIndex] = surfel.positionRadius.xyz;
+    }
+}

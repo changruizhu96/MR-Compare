@@ -1,0 +1,54 @@
+﻿    
+    /// <summary>
+    /// CPU Voxel Filter - Dictionary-based, zero collision
+    /// </summary>
+    public (Vector3[] positions, Color[] colors) ComputeVoxelFilterCPU(
+        GaussianSplatRenderer gsRenderer,
+        float voxelSize)
+    {
+        if (gsRenderer.m_BakedData == null || gsRenderer.m_BakedData.PointCount == 0)
+        {
+            Debug.LogWarning(""[CPU Voxel Filter] No BakedData"");
+            return (new Vector3[0], new Color[0]);
+        }
+        
+        var inputPos = gsRenderer.m_BakedData.positions;
+        var inputCol = gsRenderer.m_BakedData.colors;
+        Debug.Log($""[CPU Voxel Filter] Input: {inputPos.Length} points"");
+        
+        var voxelDict = new Dictionary<Vector3Int, VoxelAccumulator>();
+        
+        for (int i = 0; i < inputPos.Length; i++)
+        {
+            Vector3Int key = new Vector3Int(
+                Mathf.FloorToInt(inputPos[i].x / voxelSize),
+                Mathf.FloorToInt(inputPos[i].y / voxelSize),
+                Mathf.FloorToInt(inputPos[i].z / voxelSize)
+            );
+            
+            if (!voxelDict.ContainsKey(key))
+                voxelDict[key] = new VoxelAccumulator();
+            
+            var acc = voxelDict[key];
+            acc.posSum += inputPos[i];
+            acc.colorSum += new Vector3(inputCol[i].r, inputCol[i].g, inputCol[i].b);
+            acc.count++;
+            voxelDict[key] = acc;
+        }
+        
+        var resultPos = new List<Vector3>();
+        var resultCol = new List<Color>();
+        
+        foreach (var kvp in voxelDict)
+        {
+            if (kvp.Value.count >= 5)
+            {
+                resultPos.Add(kvp.Value.posSum / kvp.Value.count);
+                Vector3 avgCol = kvp.Value.colorSum / kvp.Value.count;
+                resultCol.Add(new Color(avgCol.x, avgCol.y, avgCol.z, 1f));
+            }
+        }
+        
+        Debug.Log($""[CPU Voxel Filter] Output: {resultPos.Count} voxels"");
+        return (resultPos.ToArray(), resultCol.ToArray());
+    }
