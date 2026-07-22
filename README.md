@@ -1,4 +1,4 @@
-# MR Compare
+# MR Compare: A Mixed-Reality Framework for Spatially Grounded Visual Comparison of 3D Gaussian Splatting and Mesh Reconstructions with the Physical Environment
 
 MR Compare is a Unity-based mixed reality project for registering reconstructed 3D scenes against a user's current physical environment and comparing them in-headset. It is designed for workflows where a user brings their own reconstructed scene, either as a 3D Gaussian Splatting asset or as a mesh, and aligns it with the real environment captured by Meta Quest.
 
