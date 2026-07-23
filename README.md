@@ -1,4 +1,8 @@
-# MR Compare: A Mixed-Reality Framework for Spatially Grounded Visual Comparison of 3D Gaussian Splatting and Mesh Reconstructions with the Physical Environment
+# MR Compare
+
+**A Mixed-Reality Framework for Spatially Grounded Visual Comparison of 3D Gaussian Splatting and Mesh Reconstructions with the Physical Environment**
+
+![Aligned 3DGS and live VST comparison in mixed reality](docs/alignment-result-3d-slider.png)
 
 MR Compare is a Unity-based mixed reality project for registering reconstructed 3D scenes against a user's current physical environment and comparing them in-headset. It is designed for workflows where a user brings their own reconstructed scene, either as a 3D Gaussian Splatting asset or as a mesh, and aligns it with the real environment captured by Meta Quest.
 
@@ -7,6 +11,10 @@ The project focuses on three tasks:
 - capturing or deriving a reference representation of the current Quest environment;
 - registering a reconstructed 3DGS or mesh scene to that reference;
 - visually comparing the registered reconstruction with the real mixed reality scene.
+
+## Paper
+
+The MR Compare paper is available on [arXiv](https://arxiv.org/abs/2607.20325).
 
 ## Quick Start
 
@@ -34,12 +42,6 @@ After alignment, use the visual comparison modes to inspect the registered recon
    - **Switch-back:** press the right controller `B` button to switch the reconstruction display on or off.
 
 The comparison modes can target either a `GaussianSplatRenderer` or a standard `MeshRenderer`.
-
-### Example MR Result
-
-The image below shows an aligned 3DGS reconstruction compared with the live video-see-through (VST) view using the 3D Slider mode.
-
-![Aligned 3DGS and live VST comparison in mixed reality](docs/alignment-result-3d-slider.png)
 
 ## System Overview
 
@@ -316,7 +318,21 @@ See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for bundled copyright and l
 
 ## Citation and Acknowledgements
 
-If MR Compare contributes to an academic publication, please cite the MR Compare paper once the final citation is available. Please also acknowledge the upstream projects listed above and cite the reconstruction, registration, or MR systems used in your workflow. Citation is an academic request and is not an additional condition of the MIT License.
+If MR Compare contributes to an academic publication, please cite the [MR Compare paper](https://arxiv.org/abs/2607.20325):
+
+```bibtex
+@misc{zhu2026mrcomparemixedrealityframeworkspatially,
+      title={MR-Compare: A Mixed-Reality Framework for Spatially Grounded Visual Comparison of 3D Gaussian Splatting and Mesh Reconstructions with the Physical Environment},
+      author={Changrui Zhu and Ernst Kruijff and Pengju Zhang and Simon Julier},
+      year={2026},
+      eprint={2607.20325},
+      archivePrefix={arXiv},
+      primaryClass={cs.GR},
+      url={https://arxiv.org/abs/2607.20325},
+}
+```
+
+Please also acknowledge the upstream projects listed above and cite the reconstruction, registration, or MR systems used in your workflow. Citation is an academic request and is not an additional condition of the MIT License.
 
 ## License
 
