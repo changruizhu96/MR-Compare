@@ -15,6 +15,7 @@ The project focuses on three tasks:
 ## Paper
 
 [![arXiv](https://img.shields.io/badge/arXiv-2607.20325-b31b1b.svg)](https://arxiv.org/abs/2607.20325)
+[![Project Page](https://img.shields.io/badge/Project-Page-blue.svg)](https://changruizhu96.github.io/work/mr-compare/)
 
 ## Quick Start
 
