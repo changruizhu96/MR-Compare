@@ -14,7 +14,7 @@ The project focuses on three tasks:
 
 ## Paper
 
-The MR Compare paper is available on [arXiv](https://arxiv.org/abs/2607.20325).
+[![arXiv](https://img.shields.io/badge/arXiv-2607.20325-b31b1b.svg)](https://arxiv.org/abs/2607.20325)
 
 ## Quick Start
 
@@ -321,7 +321,7 @@ See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for bundled copyright and l
 If MR Compare contributes to an academic publication, please cite the [MR Compare paper](https://arxiv.org/abs/2607.20325):
 
 ```bibtex
-@misc{zhu2026mrcomparemixedrealityframeworkspatially,
+@misc{zhu2026mrcompare,
       title={MR-Compare: A Mixed-Reality Framework for Spatially Grounded Visual Comparison of 3D Gaussian Splatting and Mesh Reconstructions with the Physical Environment},
       author={Changrui Zhu and Ernst Kruijff and Pengju Zhang and Simon Julier},
       year={2026},
