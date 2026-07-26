@@ -157,6 +157,8 @@ public class AllInOneRegistrationEditor : Editor
         EditorGUILayout.LabelField(isLoadMode ? "Load Alignment Result" : "Save Alignment Result", EditorStyles.boldLabel);
 
         SerializedProperty isSaving = serializedObject.FindProperty("isSaving");
+        bool usesEffectMeshRuntime = !isLoadMode &&
+                                     script.targetFormat == AllInOneRegistration.TargetFormat.effectMesh;
         if (!isLoadMode)
         {
             EditorGUILayout.PropertyField(isSaving);
@@ -190,6 +192,7 @@ public class AllInOneRegistrationEditor : Editor
 
             if (usesEffectMesh)
             {
+                usesEffectMeshRuntime = true;
                 if (isLoadMode || script.targetFormat != AllInOneRegistration.TargetFormat.effectMesh)
                 {
                     EditorGUILayout.PropertyField(serializedObject.FindProperty("effectMeshEventTarget"));
@@ -197,6 +200,14 @@ public class AllInOneRegistrationEditor : Editor
             }
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("alignmentFile"));
+        }
+
+        if (usesEffectMeshRuntime)
+        {
+            SerializedProperty deactivateMruk = serializedObject.FindProperty("deactivateMrukAfterEffectMeshUse");
+            EditorGUILayout.PropertyField(
+                deactivateMruk,
+                new GUIContent("Deactivate MRUK After Effect Mesh Use", deactivateMruk.tooltip));
         }
 
         // Apply any changes made in the inspector.

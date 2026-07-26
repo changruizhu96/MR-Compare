@@ -3614,7 +3614,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   workflowMode: 0
-  targetFormat: 3
+  targetFormat: 2
   sourceType: 0
   roughAligner: 0
   gaussianSourceRenderer: {fileID: 839451690}
@@ -3654,7 +3654,7 @@ MonoBehaviour:
   isTargetPointVisualization: 1
   isBoxSelection: 0
   isSaving: 1
-  alignmentReferenceMode: 2
+  alignmentReferenceMode: 0
   alignmentFile: alignment_scan.json
 --- !u!4 &634045722
 Transform:
@@ -6898,8 +6898,6 @@ MonoBehaviour:
   wideMotionModeHandPosesEnabled: 0
   _readOnlyFastMotionModeHandPosesEnabled: 0
   fastMotionModeHandPosesEnabled: 0
-  _readOnlyWideMotionMode2HandPosesEnabled: 0
-  wideMotionMode2HandPosesEnabled: 0
   dynamicResolutionVersion: 1
 --- !u!114 &1121345601
 MonoBehaviour:

@@ -84,15 +84,19 @@ User-specific reconstructed scenes are not included in the repository. To use th
 - Unity `6000.0.76f1`
 - Meta Quest 3 or compatible Meta XR device
 - Meta Quest Link-based development and testing workflow
-- Tested Meta Quest Link versions: `v77`, `v85`, and `v201`
-- Meta XR SDK `201.0.0`
-- Meta MR Utility Kit `201.0.0`
-- OpenXR / Meta OpenXR
+- Current tested Meta Quest Link version: `v203` (previously tested with `v77`, `v85`, and `v201`)
+- Meta XR Core SDK `203.0.0`
+- Meta MR Utility Kit `203.0.0`
+- Meta XR Interaction SDK OVR `201.0.0`
+- Meta OpenXR `2.5.1`
+- Unity OpenXR `1.16.1`
 - Universal Render Pipeline `17.0.4`
 - Windows editor/runtime environment for the native registration plugin
 - [Microsoft Visual C++ Redistributable v14, x64](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) for the native registration DLLs
 
 Make sure the Quest headset OS/runtime is compatible with the Meta Quest Link version used on the development PC. Mismatched Quest Link and headset OS versions can cause environment depth, scene, or OpenXR behavior to differ from the tested setup.
+
+For the most stable experience, disable the **Public Test Channel (PTC)** in the Meta Quest Link PC app. PTC releases may introduce runtime changes or regressions before the corresponding general release, which can affect Quest Link, OpenXR, MRUK scene data, or Environment Depth behavior. Use the general-release channel unless you specifically need to test a preview runtime.
 
 Native registration depends on DLLs under:
 

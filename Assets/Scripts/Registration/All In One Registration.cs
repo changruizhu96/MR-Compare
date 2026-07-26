@@ -129,6 +129,8 @@ public class AllInOneRegistration : MonoBehaviour
     public bool isSaving = false;
     [SerializeField] private AlignmentReferenceMode alignmentReferenceMode = AlignmentReferenceMode.EffectMesh;
     [SerializeField] private string alignmentFile = "alignment_demo.json";
+    [SerializeField, Tooltip("After Effect Mesh registration or loading finishes, detach the source while preserving its world pose, then deactivate Effect Mesh and MRUK runtime updates.")]
+    private bool deactivateMrukAfterEffectMeshUse = true;
 
     
 
@@ -146,6 +148,8 @@ public class AllInOneRegistration : MonoBehaviour
     private Action onBothReady;
     private Transform currentRoomMeshReference;
     private Transform currentEffectMeshReference;
+    private Transform sourceParentBeforeEffectMeshUse;
+    private bool effectMeshRuntimeDeactivated;
 
     private struct PointDataVFX { public Vector3 position; }
     private List<PointDataVFX> pointDataList = new();
@@ -238,6 +242,7 @@ public class AllInOneRegistration : MonoBehaviour
 
     private void Awake()
     {
+        sourceParentBeforeEffectMeshUse = GetSourceTransform()?.parent;
         ConfigureScannerTargetActivation();
         ConfigureEffectMeshRendering();
 
@@ -797,7 +802,83 @@ public class AllInOneRegistration : MonoBehaviour
             targetTransform.localScale = savedPose.localScale;
         }
 
+        if (ShouldDeactivateEffectMeshRuntimeAfterUse())
+        {
+            Transform stableParent = sourceParentBeforeEffectMeshUse;
+            if (stableParent != null &&
+                (stableParent == referenceTransform || stableParent.IsChildOf(referenceTransform)))
+            {
+                stableParent = null;
+            }
+
+            targetTransform.SetParent(stableParent, true);
+        }
+
         Debug.Log($"Loaded saved alignment from {GetAlignmentFileName()} using {GetAlignmentReferenceLabel()} reference.", this);
+        DeactivateEffectMeshRuntimeAfterUse();
+    }
+
+    private bool ShouldDeactivateEffectMeshRuntimeAfterUse()
+    {
+        if (!deactivateMrukAfterEffectMeshUse)
+        {
+            return false;
+        }
+
+        if (workflowMode == WorkflowMode.Load)
+        {
+            return alignmentReferenceMode == AlignmentReferenceMode.EffectMesh;
+        }
+
+        return targetFormat == TargetFormat.effectMesh ||
+               (isSaving && alignmentReferenceMode == AlignmentReferenceMode.EffectMesh);
+    }
+
+    private void DeactivateEffectMeshRuntimeAfterUse()
+    {
+        if (effectMeshRuntimeDeactivated || !ShouldDeactivateEffectMeshRuntimeAfterUse())
+        {
+            return;
+        }
+
+        Transform sourceTransform = GetSourceTransform();
+        if (sourceTransform != null &&
+            currentEffectMeshReference != null &&
+            sourceTransform.IsChildOf(currentEffectMeshReference))
+        {
+            Transform stableParent = sourceParentBeforeEffectMeshUse;
+            if (stableParent != null &&
+                (stableParent == currentEffectMeshReference || stableParent.IsChildOf(currentEffectMeshReference)))
+            {
+                stableParent = null;
+            }
+
+            sourceTransform.SetParent(stableParent, true);
+        }
+
+        if (effectMeshEventTarget != null)
+        {
+            effectMeshEventTarget.OnGlobalMeshLoadComplete.RemoveListener(HandleEffectMeshRendererLoaded);
+            effectMeshEventTarget.OnGlobalMeshLoadComplete.RemoveListener(HandleEffectMeshLoaded);
+        }
+
+        if (currentEffectMeshReference != null)
+        {
+            currentEffectMeshReference.gameObject.SetActive(false);
+        }
+
+        if (effectMeshEventTarget != null)
+        {
+            effectMeshEventTarget.gameObject.SetActive(false);
+        }
+
+        if (MRUK.Instance != null)
+        {
+            MRUK.Instance.enabled = false;
+        }
+
+        effectMeshRuntimeDeactivated = true;
+        Debug.Log("[AllInOneRegistration] Effect Mesh use completed. The source was detached with its world pose preserved, and Effect Mesh/MRUK runtime updates were deactivated.", this);
     }
 
     private void WarnIfAlignmentReferenceMismatch(PoseData savedPose)
@@ -1697,6 +1778,7 @@ public class AllInOneRegistration : MonoBehaviour
         }
         finally
         {
+            DeactivateEffectMeshRuntimeAfterUse();
             isRegistrationRunning = false;
             if (pointCloudVFX != null)
             {
