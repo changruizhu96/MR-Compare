@@ -1,11 +1,11 @@
 # MR Compare
 
-[![arXiv](https://img.shields.io/badge/arXiv-2607.20325-b31b1b.svg)](https://arxiv.org/abs/2607.20325)
-[![Project Page](https://img.shields.io/badge/Project-Page-blue.svg)](https://changruizhu96.github.io/work/mr-compare/)
-
 **A Mixed-Reality Framework for Spatially Grounded Visual Comparison of 3D Gaussian Splatting and Mesh Reconstructions with the Physical Environment**
 
-> **Publication status:** Accepted for publication in IEEE Transactions on Visualization and Computer Graphics (TVCG), 2026.
+## TVCG 2026
+
+[![arXiv](https://img.shields.io/badge/arXiv-2607.20325-b31b1b.svg)](https://arxiv.org/abs/2607.20325)
+[![Project Page](https://img.shields.io/badge/Project-Page-blue.svg)](https://changruizhu96.github.io/work/mr-compare/)
 
 ![Aligned 3DGS and live VST comparison in mixed reality](docs/alignment-result-3d-slider.png)
 
