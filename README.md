@@ -2,9 +2,9 @@
 
 **A Mixed-Reality Framework for Spatially Grounded Visual Comparison of 3D Gaussian Splatting and Mesh Reconstructions with the Physical Environment**
 
-## TVCG 2026
+## IEEE ISMAR 2026 · TVCG Paper
 
-### [ISMAR 2026 Best Paper Award Honorable Mention](https://www.ieeeismar.net/2026/awards/)
+### [🏆 Best Paper Award Honorable Mention](https://www.ieeeismar.net/2026/awards/)
 
 [![arXiv](https://img.shields.io/badge/arXiv-2607.20325-b31b1b.svg)](https://arxiv.org/abs/2607.20325)
 [![Project Page](https://img.shields.io/badge/Project-Page-blue.svg)](https://changruizhu96.github.io/work/mr-compare/)
