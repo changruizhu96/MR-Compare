@@ -1,4 +1,4 @@
-# MR-Compare: Unity XR + 3DGS Toolkit
+# MR-Compare: 3DGS Toolkit for Unity XR and Mixed Reality
 
 ### Complete VR rendering, extended to spatially grounded MR interaction on Meta Quest
 
