@@ -1,38 +1,89 @@
-# MR Compare
+# MR-Compare
 
-**A Mixed-Reality Framework for Spatially Grounded Visual Comparison of 3D Gaussian Splatting and Mesh Reconstructions with the Physical Environment**
+### 3D Gaussian Splatting for Unity XR — complete VR support, extended to spatially grounded mixed reality
 
-## IEEE ISMAR 2026 · TVCG Paper
-
-### [Best Paper Award · Honorable Mention](https://www.ieeeismar.net/2026/awards/)
-
+[![Unity](https://img.shields.io/badge/Unity-6000.0.76f1-000000.svg?logo=unity)](https://unity.com/)
+[![Meta Quest](https://img.shields.io/badge/Meta%20Quest-3-0467DF.svg?logo=meta)](https://www.meta.com/quest/quest-3/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![arXiv](https://img.shields.io/badge/arXiv-2607.20325-b31b1b.svg)](https://arxiv.org/abs/2607.20325)
 [![Project Page](https://img.shields.io/badge/Project-Page-blue.svg)](https://changruizhu96.github.io/work/mr-compare/)
 
 ![Aligned 3DGS and live VST comparison in mixed reality](docs/alignment-result-3d-slider.png)
 
-MR Compare is a Unity-based mixed reality project for registering reconstructed 3D scenes against a user's current physical environment and comparing them in-headset. It is designed for workflows where a user brings their own reconstructed scene, either as a 3D Gaussian Splatting asset or as a mesh, and aligns it with the real environment captured by Meta Quest.
+MR-Compare is a self-contained Unity XR research toolkit for importing, rendering, and interacting with 3D Gaussian Splatting (3DGS) on Meta Quest. Use it as a complete VR 3DGS workflow, or extend the same content into mixed reality by registering it to the physical environment and combining it with live passthrough, Environment Depth, Effect Mesh, and spatial anchors.
 
-The project focuses on three tasks:
+The repository brings the XR renderer, 3DGS asset workflow, Quest environment capture, coarse-to-fine registration, spatial persistence, and in-headset comparison techniques into one Unity project.
 
-- capturing or deriving a reference representation of the current Quest environment;
-- registering a reconstructed 3DGS or mesh scene to that reference;
-- visually comparing the registered reconstruction with the real mixed reality scene.
+## Use MR-Compare in two ways
+
+| Unity XR + 3DGS (VR) | Spatially grounded 3DGS (MR) |
+| --- | --- |
+| Import and render 3DGS assets in Unity XR | Keep the complete Unity XR rendering workflow |
+| Place splats in VR scenes and application logic | Register 3DGS or meshes to the physical environment |
+| View and interact with splats through an XR camera | Use Effect Mesh or Environment Depth as registration targets |
+| Use the project without physical-world registration | Persist alignment with Quest coordinates or spatial anchors |
+| Build custom VR interactions around `GaussianSplatRenderer` | Compare registered content with passthrough using Mini-Window, 3D Slider, or Switch-back |
+
+## What is included
+
+### Unity XR + 3DGS
+
+- A modified [UnityGaussianSplatting](https://github.com/aras-p/UnityGaussianSplatting) package with XR rendering support.
+- Unity tools for creating `GaussianSplatAsset` data and rendering it with `GaussianSplatRenderer`.
+- Support for placing 3DGS content in OpenXR/Meta Quest scenes and integrating it with application logic.
+- Editor tools for transforming, inspecting, filtering, and preparing Gaussian content.
+
+### Extending 3DGS into mixed reality
+
+- Source-point extraction from 3DGS centres or Unity meshes.
+- Physical-environment targets from Effect Mesh, reusable Environment Depth pre-scans, real-time scans, or legacy room meshes.
+- FPFH/TEASER++ coarse registration followed by GICP or VGICP refinement.
+- Alignment save/load support using spatial anchors, room meshes, or the current Effect Mesh.
+- Mini-Window, 3D Slider, and Switch-back interaction modes for comparing reconstructions with live passthrough.
+
+## How MR-Compare extends 3DGS into mixed reality
+
+MR-Compare does not replace the Unity 3DGS rendering workflow. It extends it by extracting registration geometry from the Gaussian representation, aligning that geometry with the physical environment observed by Quest, and applying the recovered transform back to the rendered 3DGS object.
+
+![MR-Compare workflow](docs/workflow-ai.jpg)
+
+The MR path is:
+
+1. Import a 3DGS asset or mesh into Unity.
+2. Extract clean source points from Gaussian centres or mesh geometry.
+3. Collect target geometry from Effect Mesh or an Environment Depth scan.
+4. Voxelise the point clouds and build FPFH correspondences.
+5. Run TEASER++ for robust coarse registration.
+6. Refine the alignment with GICP or VGICP.
+7. Store the result relative to the Quest world, an Effect Mesh, or a spatial anchor.
+8. Interact with the spatially grounded reconstruction through passthrough comparison modes.
 
 ## Quick Start
 
+### Option A — Use 3DGS in VR
+
 1. Clone this repository and open it in Unity `6000.0.76f1`.
-2. Let Unity restore the packages from `Packages/manifest.json`.
-3. Prepare a source scene using one of these recommended routes:
-   - **Fast mobile route — [Scaniverse](https://scaniverse.com/):** capture and process a Gaussian splat directly on a phone. This is the easiest way to try MR Compare because it needs no desktop photogrammetry setup and typically produces a source close enough to real-world scale for an initial alignment. The visual fidelity may be lower than a carefully trained desktop 3DGS, but it is the recommended first experience.
-   - **Higher-quality desktop route — [RealityScan](https://www.realityscan.com/download):** first [align the source images](https://rshelp.capturingreality.com/en-US/tutorials/quickstart_2.htm), then establish metric scale with [control points and distance constraints](https://rshelp.capturingreality.com/en-US/tutorials/scaling.htm). Export a mesh, or use the aligned cameras/images as the scale-aware input to a desktop 3DGS pipeline.
-4. Import the resulting 3DGS asset or mesh into Unity and add it to `Assets/Scenes/Alignment Demo.unity`. For 3DGS, open `Tools > Gaussian Splats > Create GaussianSplatAsset` and set `Quality` to `Very High` before creating the asset. **`Very High` is required because lower-quality position encoding can prevent MR Compare from reading the 3DGS center correctly.**
-5. Confirm that the imported source is close to real-world scale. If it is not, correct it manually before relying on `Estimate Scaling`.
-6. For 3DGS, use `Gaussian Splat Render` > `Baking & Debug` to remove floaters, skybox points, and unrelated background geometry.
-7. On Quest, complete `Settings > Environment Setup > Space Setup` so the default Effect Mesh workflow has a current global mesh.
-8. On `AllInOneRegistration`, set `Workflow Mode` to `Align` and `Target Format` to `effectMesh`, then assign the source renderer or mesh and the `Effect Mesh Event Target`. New components already use the remaining tested defaults: `GaussianSplating`, TEASER, GICP, baked source data, and repeated alignment.
-9. Run `Alignment Demo.unity` on Quest. The first alignment starts when the source and Effect Mesh target are ready.
-10. If the result needs refinement, press `Y` to align again with the retained target data.
+2. Let Unity restore the dependencies in `Packages/manifest.json`.
+3. Open `Tools > Gaussian Splats > Create GaussianSplatAsset` and import your 3DGS source.
+4. For VR-only rendering, select the asset quality appropriate for your application. Use `Very High` if the same asset will later be used for MR registration, because registration reads the uncompressed Gaussian positions.
+5. Add a `GaussianSplatRenderer` to an object in an XR-enabled scene and assign the created asset.
+6. Position the object as normal Unity scene content and run the project through the configured OpenXR/Meta Quest workflow.
+7. Integrate the renderer with your own XR interaction and application logic as needed. Physical-world scanning and registration are not required for VR-only use.
+
+### Option B — Register 3DGS to the physical world in MR
+
+1. Clone this repository, open it in Unity `6000.0.76f1`, and let Unity restore the packages.
+2. Prepare a source scene using one of these routes:
+   - **Fast mobile route — [Scaniverse](https://scaniverse.com/):** capture and process a Gaussian splat directly on a phone. This requires the fewest reconstruction steps and is the easiest first experience.
+   - **Higher-quality desktop route — [RealityScan](https://www.realityscan.com/download):** [align the source images](https://rshelp.capturingreality.com/en-US/tutorials/quickstart_2.htm), establish metric scale with [control points and distance constraints](https://rshelp.capturingreality.com/en-US/tutorials/scaling.htm), then export a mesh or pass the calibrated cameras and images to a desktop 3DGS pipeline.
+3. Import the 3DGS asset or mesh into `Assets/Scenes/Alignment Demo.unity`. For 3DGS, create the asset with `Quality` set to `Very High`.
+4. Confirm that the imported source is close to real-world scale, then use `Gaussian Splat Render > Baking & Debug` to remove floaters, skybox points, and unrelated background geometry.
+5. On Quest, complete `Settings > Environment Setup > Space Setup` so the simplest Effect Mesh route has a current global mesh. For higher-fidelity target geometry, use the reusable Pre-Scan / Quest 3 Scanner workflow described below.
+6. On `AllInOneRegistration`, set `Workflow Mode` to `Align`, choose the target format, and assign the source renderer or mesh plus the required target reference.
+7. Run `Alignment Demo.unity`. The tested defaults use TEASER++ for coarse registration, GICP for refinement, baked source data, and repeated alignment.
+8. If the result needs refinement, press `Y` to align again with the retained target data.
+
+See [Choosing a Registration Target](#choosing-a-registration-target) for the Effect Mesh, Pre-Scan, Real-Time Scan, and legacy Room Mesh tradeoffs.
 
 ### Visual Comparison Controls
 
@@ -46,40 +97,23 @@ After alignment, use the visual comparison modes to inspect the registered recon
 
 The comparison modes can target either a `GaussianSplatRenderer` or a standard `MeshRenderer`.
 
-## System Overview
+## Research Publication
 
-![MR Compare workflow](docs/workflow-ai.jpg)
+MR-Compare was developed and evaluated through the following publication:
 
-MR Compare converts both the reconstructed source scene and the Quest-side target environment into point cloud representations before registration.
+**MR-Compare: A Mixed-Reality Framework for Spatially Grounded Visual Comparison of 3D Gaussian Splatting and Mesh Reconstructions with the Physical Environment**
 
-The high-level workflow is:
+**IEEE ISMAR 2026 · TVCG Paper**
 
-1. Collect source data with a phone, camera, or desktop reconstruction pipeline.
-2. Import the source as either a mesh or 3DGS asset.
-3. Extract clean source points from the mesh or 3DGS representation.
-4. Collect target points from Quest scene data, a saved Quest point cloud scan, a room mesh, or an effect mesh.
-5. Run coarse registration with voxelisation, FPFH features, and TEASER++.
-6. Refine the alignment with GICP/VGICP.
-7. Save or load the alignment relative to a spatial anchor, room mesh, or effect mesh.
-8. Inspect the result in mixed reality with interactive visual comparison modes.
+[Best Paper Award · Honorable Mention](https://www.ieeeismar.net/2026/awards/)
 
-TEASER++ is used as the robust coarse registration stage. It is especially useful when the initial source and target poses are far apart or when the correspondence set contains outliers. GICP/VGICP is then used as the fine registration stage once the two point clouds have a reasonable initial overlap.
-
-## Features
-
-- Unity mixed reality workflow targeting Meta Quest 3.
-- Source support for 3D Gaussian Splatting assets and Unity meshes.
-- Target support for pre-scanned point clouds, real-time Quest scans, Meta room meshes, and Meta effect meshes.
-- Registration pipeline with optional TEASER++ rough alignment and GICP/VGICP refinement.
-- Alignment save/load support using spatial anchors, current room mesh references, or current effect mesh references.
-- In-headset visual comparison modes for comparing the registered reconstruction against passthrough.
-- Quest point cloud scanner with spatial anchor persistence.
+[Paper on arXiv](https://arxiv.org/abs/2607.20325) · [Project page](https://changruizhu96.github.io/work/mr-compare/)
 
 ## Project Status
 
-This repository is a research/prototype Unity project. It is intended to be opened, inspected, modified, and adapted for scene-specific registration workflows.
+MR-Compare is a reusable Unity research toolkit rather than a finished consumer application. The repository includes the Unity XR/3DGS workflow, example scenes, MR registration pipeline, bundled native registration libraries, and interaction techniques. Users provide their own reconstructed 3DGS or mesh assets, and some workflows require scene-specific setup and parameter tuning.
 
-User-specific reconstructed scenes are not included in the repository. To use the project, prepare your own 3DGS asset or mesh model and place it in the Unity project as described below.
+“Self-contained” refers to the integrated Unity workflow: the XR renderer, environment capture, registration pipeline, and interaction techniques are maintained in one project. Unity and Meta packages are restored through the package manager, and the current registration backend uses bundled Windows `x86_64` native libraries tested through Meta Quest Link. Registration is not executed entirely on the headset.
 
 ## Requirements
 
