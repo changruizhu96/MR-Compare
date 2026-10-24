@@ -1,6 +1,6 @@
-# MR-Compare
+# MR-Compare: Unity XR + 3DGS Toolkit
 
-### 3D Gaussian Splatting for Unity XR — complete VR support, extended to spatially grounded mixed reality
+### Complete VR rendering, extended to spatially grounded MR interaction on Meta Quest
 
 [![Unity](https://img.shields.io/badge/Unity-6000.0.76f1-000000.svg?logo=unity)](https://unity.com/)
 [![Meta Quest](https://img.shields.io/badge/Meta%20Quest-3-0467DF.svg?logo=meta)](https://www.meta.com/quest/quest-3/)
