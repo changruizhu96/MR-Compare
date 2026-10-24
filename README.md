@@ -1,6 +1,6 @@
-# MR-Compare: 3DGS Toolkit for Unity XR and Mixed Reality
+# Unity XR 3DGS Toolkit
 
-### Complete VR rendering, extended to spatially grounded MR interaction on Meta Quest
+### 3D Gaussian Splatting for VR and Mixed Reality in Unity
 
 [![Unity](https://img.shields.io/badge/Unity-6000.0.76f1-000000.svg?logo=unity)](https://unity.com/)
 [![Meta Quest](https://img.shields.io/badge/Meta%20Quest-3-0467DF.svg?logo=meta)](https://www.meta.com/quest/quest-3/)
@@ -8,13 +8,19 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2607.20325-b31b1b.svg)](https://arxiv.org/abs/2607.20325)
 [![Project Page](https://img.shields.io/badge/Project-Page-blue.svg)](https://changruizhu96.github.io/work/mr-compare/)
 
-![Aligned 3DGS and live VST comparison in mixed reality](docs/alignment-result-3d-slider.png)
+Unity XR 3DGS Toolkit is a self-contained Unity research toolkit for importing, rendering, and interacting with 3D Gaussian Splatting (3DGS) on Meta Quest. Use it as a complete VR 3DGS workflow, or extend the same content into mixed reality by registering it to the physical environment and combining it with live passthrough, Environment Depth, Effect Mesh, and spatial anchors.
 
-MR-Compare is a self-contained Unity XR research toolkit for importing, rendering, and interacting with 3D Gaussian Splatting (3DGS) on Meta Quest. Use it as a complete VR 3DGS workflow, or extend the same content into mixed reality by registering it to the physical environment and combining it with live passthrough, Environment Depth, Effect Mesh, and spatial anchors.
+Originally developed for **[MR-Compare](https://changruizhu96.github.io/work/mr-compare/)**, this repository is the ongoing development home of the toolkit. MR-Compare remains the research foundation; the toolkit is maintained as a reusable software project whose scope is not limited to the original paper. The paper documents the evaluated research system, while this README describes the current toolkit.
+
+**Research foundation:** MR-Compare · IEEE ISMAR 2026 · TVCG Paper · [Best Paper Award · Honorable Mention](https://www.ieeeismar.net/2026/awards/)
+
+[Paper](https://arxiv.org/abs/2607.20325) · [MR-Compare project page](https://changruizhu96.github.io/work/mr-compare/) · [Citation](#citation-and-acknowledgements)
+
+![Aligned 3DGS and live VST comparison in mixed reality](docs/alignment-result-3d-slider.png)
 
 The repository brings the XR renderer, 3DGS asset workflow, Quest environment capture, coarse-to-fine registration, spatial persistence, and in-headset comparison techniques into one Unity project.
 
-## Use MR-Compare in two ways
+## Use the toolkit in two ways
 
 | Unity XR + 3DGS (VR) | Spatially grounded 3DGS (MR) |
 | --- | --- |
@@ -41,9 +47,9 @@ The repository brings the XR renderer, 3DGS asset workflow, Quest environment ca
 - Alignment save/load support using spatial anchors, room meshes, or the current Effect Mesh.
 - Mini-Window, 3D Slider, and Switch-back interaction modes for comparing reconstructions with live passthrough.
 
-## How MR-Compare extends 3DGS into mixed reality
+## How the toolkit extends 3DGS into mixed reality
 
-MR-Compare does not replace the Unity 3DGS rendering workflow. It extends it by extracting registration geometry from the Gaussian representation, aligning that geometry with the physical environment observed by Quest, and applying the recovered transform back to the rendered 3DGS object.
+The toolkit extends the Unity 3DGS rendering workflow with the MR-Compare registration pipeline: extracting registration geometry from the Gaussian representation, aligning that geometry with the physical environment observed by Quest, and applying the recovered transform back to the rendered 3DGS object.
 
 ![MR-Compare workflow](docs/workflow-ai.jpg)
 
@@ -111,7 +117,7 @@ MR-Compare was developed and evaluated through the following publication:
 
 ## Project Status
 
-MR-Compare is a reusable Unity research toolkit rather than a finished consumer application. The repository includes the Unity XR/3DGS workflow, example scenes, MR registration pipeline, bundled native registration libraries, and interaction techniques. Users provide their own reconstructed 3DGS or mesh assets, and some workflows require scene-specific setup and parameter tuning.
+Unity XR 3DGS Toolkit is a reusable Unity research toolkit rather than a finished consumer application. The repository includes the Unity XR/3DGS workflow, example scenes, MR registration pipeline, bundled native registration libraries, and interaction techniques. Users provide their own reconstructed 3DGS or mesh assets, and some workflows require scene-specific setup and parameter tuning.
 
 “Self-contained” refers to the integrated Unity workflow: the XR renderer, environment capture, registration pipeline, and interaction techniques are maintained in one project. Unity and Meta packages are restored through the package manager, and the current registration backend uses bundled Windows `x86_64` native libraries tested through Meta Quest Link. Registration is not executed entirely on the headset.
 
