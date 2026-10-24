@@ -12,6 +12,12 @@ Unity XR 3DGS Toolkit is a self-contained Unity research toolkit for importing, 
 
 Originally developed for **[MR-Compare](https://changruizhu96.github.io/work/mr-compare/)**, this repository is the ongoing development home of the toolkit. MR-Compare remains the research foundation; the toolkit is maintained as a reusable software project whose scope is not limited to the original paper. The paper documents the evaluated research system, while this README describes the current toolkit.
 
+**Start here:** [VR Quick Start](#vr-quick-start) · [MR Registration](#mr-registration) · [Requirements](#requirements)
+
+- **Project or package?** A complete Unity project with integrated packages and example scenes, not a standalone UPM-installable toolkit package.
+- **Does it require a PC?** Windows PC + Meta Quest Link is the tested workflow. MR registration uses Windows `x86_64` native libraries and does not run entirely on the headset.
+- **Can I use VR without MR registration?** Yes. Import and render 3DGS in an XR scene without physical-world scanning or registration.
+
 **Research foundation:** MR-Compare · IEEE ISMAR 2026 · TVCG Paper · [Best Paper Award · Honorable Mention](https://www.ieeeismar.net/2026/awards/)
 
 [Paper](https://arxiv.org/abs/2607.20325) · [MR-Compare project page](https://changruizhu96.github.io/work/mr-compare/) · [Citation](#citation-and-acknowledgements)
@@ -66,6 +72,8 @@ The MR path is:
 
 ## Quick Start
 
+<a id="vr-quick-start"></a>
+
 ### Option A — Use 3DGS in VR
 
 1. Clone this repository and open it in Unity `6000.0.76f1`.
@@ -75,6 +83,8 @@ The MR path is:
 5. Add a `GaussianSplatRenderer` to an object in an XR-enabled scene and assign the created asset.
 6. Position the object as normal Unity scene content and run the project through the configured OpenXR/Meta Quest workflow.
 7. Integrate the renderer with your own XR interaction and application logic as needed. Physical-world scanning and registration are not required for VR-only use.
+
+<a id="mr-registration"></a>
 
 ### Option B — Register 3DGS to the physical world in MR
 
