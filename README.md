@@ -1,6 +1,9 @@
-# Unity XR 3DGS Toolkit
+# MR-Compare
 
-### 3D Gaussian Splatting for VR and Mixed Reality in Unity
+### A Mixed-Reality Framework for Spatially Grounded Visual Comparison of 3D Gaussian Splatting and Mesh Reconstructions with the Physical Environment
+
+> **Looking for the actively maintained Unity XR toolkit?**
+> Future toolkit development and new features are maintained in **[Unity XR 3DGS Toolkit](https://github.com/changruizhu96/Unity-XR-3DGS-Toolkit)**. This repository retains the MR-Compare research implementation and its project history. For ongoing updates and the latest setup instructions, use the toolkit repository.
 
 [![Unity](https://img.shields.io/badge/Unity-6000.0.76f1-000000.svg?logo=unity)](https://unity.com/)
 [![Meta Quest](https://img.shields.io/badge/Meta%20Quest-3-0467DF.svg?logo=meta)](https://www.meta.com/quest/quest-3/)
@@ -8,9 +11,9 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2607.20325-b31b1b.svg)](https://arxiv.org/abs/2607.20325)
 [![Project Page](https://img.shields.io/badge/Project-Page-blue.svg)](https://changruizhu96.github.io/work/mr-compare/)
 
-Unity XR 3DGS Toolkit is a self-contained Unity research toolkit for importing, rendering, and interacting with 3D Gaussian Splatting (3DGS) on Meta Quest. Use it as a complete VR 3DGS workflow, or extend the same content into mixed reality by registering it to the physical environment and combining it with live passthrough, Environment Depth, Effect Mesh, and spatial anchors.
+MR-Compare is a self-contained Unity research project for importing, rendering, and interacting with 3D Gaussian Splatting (3DGS) on Meta Quest. Use it as a complete VR 3DGS workflow, or extend the same content into mixed reality by registering it to the physical environment and combining it with live passthrough, Environment Depth, Effect Mesh, and spatial anchors.
 
-Originally developed for **[MR-Compare](https://changruizhu96.github.io/work/mr-compare/)**, this repository is the ongoing development home of the toolkit. MR-Compare remains the research foundation; the toolkit is maintained as a reusable software project whose scope is not limited to the original paper. The paper documents the evaluated research system, while this README describes the current toolkit.
+**[MR-Compare](https://changruizhu96.github.io/work/mr-compare/)** is the research foundation of **[Unity XR 3DGS Toolkit](https://github.com/changruizhu96/Unity-XR-3DGS-Toolkit)**. The toolkit continues from this project's code and commit history as a separate software repository. The paper documents the evaluated research system; the instructions below describe the implementation retained here, including subsequent maintenance updates.
 
 **Start here:** [VR Quick Start](#vr-quick-start) · [MR Registration](#mr-registration) · [Requirements](#requirements)
 
